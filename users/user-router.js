@@ -2,10 +2,12 @@ const express = require('express');
 
 const db = require('../data/db-config.js');
 
+const Users = require('./users-model.js');
+
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  db('users')
+  Users.find()
   .then(users => {
     res.json(users);
   })
@@ -17,10 +19,8 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   const { id } = req.params;
 
-  db('users').where({ id })
-  .then(users => {
-    const user = users[0];
-
+  Users.findByID(id)
+  .then(user => {
     if (user) {
       res.json(user);
     } else {
@@ -32,12 +32,24 @@ router.get('/:id', (req, res) => {
   });
 });
 
+router.get('/:id/posts', (req, res) => {
+  const {id} = req.params;
+
+  Users.findPosts(id)
+    .then(posts => {
+      res.json(posts);
+    })
+    .catch(err => {
+      res.status(500).json({ message: 'error' });
+    });
+});
+
 router.post('/', (req, res) => {
   const userData = req.body;
 
-  db('users').insert(userData)
+  Users.add(userData)
   .then(ids => {
-    res.status(201).json({ created: ids[0] });
+    res.status(201).json({ createdID: ids[0] });
   })
   .catch(err => {
     res.status(500).json({ message: 'Failed to create new user' });
